@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentPromptDesk AI Agents</title>
+<style>
+body{font-family:sans-serif;background:#0A0A0A;color:#F5F5F5;padding:2rem;margin:0}
+.container{max-width:800px;margin:0 auto}
+h1{font-size:22px;margin-bottom:4px}
+p{color:#888;font-size:14px;margin-bottom:1.5rem}
+.orange{color:#F97316;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:block}
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:9px 16px;border-radius:8px;border:1px solid #222;background:#111;font-size:13px;font-weight:500;cursor:pointer;color:#888;font-family:inherit;display:flex;align-items:center;gap:7px}
+.tab:hover{background:#1A1A1A;color:#F5F5F5}
+.tab.active{background:#1A1A1A;color:#F5F5F5;border-color:#333}
+.dot{width:8px;height:8px;border-radius:50%}
+.panel{background:#111;border:1px solid #222;border-radius:14px;overflow:hidden}
+.panel-header{padding:1rem 1.25rem;border-bottom:1px solid #1A1A1A;display:flex;align-items:center;gap:10px;background:#0D0D0D}
+.icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.info h3{font-size:14px;font-weight:600;margin:0}
+.info p{font-size:11px;color:#888;margin:2px 0 0}
+.meta{margin-left:auto;display:flex;gap:8px;align-items:center}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid #222;color:#888}
+.status{font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(29,158,117,.15);color:#1D9E75}
+.chat{height:360px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:14px;background:#0A0A0A}
+.chat::-webkit-scrollbar{width:3px}
+.chat::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
+.msg{display:flex;gap:8px;max-width:86%;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;background:rgba(249,115,22,.15);color:#F97316}
+.msg.user .avatar{background:#1A1A1A;color:#888;border:1px solid #222}
+.bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.7;background:#111;border:1px solid #222;color:#E5E5E5;white-space:pre-wrap;word-break:break-word}
+.msg.user .bubble{background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.2);color:#F5F5F5}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:#111;border:1px solid #222;border-radius:12px;width:fit-content}
+.tdot{width:6px;height:6px;border-radius:50%;background:#888;animation:bounce 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+.chips-area{padding:.875rem 1.25rem;border-top:1px solid #1A1A1A;background:#0D0D0D}
+.chips-label{font-size:10px;color:#555;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 11px;border:1px solid #222;border-radius:20px;font-size:12px;cursor:pointer;color:#888;background:#111;font-family:inherit;transition:all .15s}
+.chip:hover{border-color:#F97316;color:#F97316}
+.input-area{padding:.875rem 1.25rem;border-top:1px solid #1A1A1A;display:flex;gap:8px;align-items:flex-end;background:#0D0D0D}
+textarea{flex:1;resize:none;border:1px solid #222;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;background:#111;color:#F5F5F5;min-height:42px;max-height:120px;line-height:1.5}
+textarea:focus{outline:none;border-color:#333}
+textarea::placeholder{color:#555}
+.send{padding:10px 18px;background:#F97316;color:#0A0A0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.send:hover{background:#EA6C0A}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.footer{font-size:11px;color:#333;text-align:center;padding:8px;border-top:1px solid #1A1A1A;background:#0D0D0D}
+.footer span{color:#F97316}
+</style>
+</head>
+<body>
+<div class="container">
+<span class="orange">AgentPromptDesk</span>
+<h1>AI Agents</h1>
+<p>Four specialized agents trained on the full CEO Prompt Vault library.</p>
+
+<div class="tabs">
+<button class="tab active" onclick="switchAgent('revenue')"><span class="dot" style="background:#E24B4A"></span>Revenue Agent</button>
+<button class="tab" onclick="switchAgent('marketing')"><span class="dot" style="background:#378ADD"></span>Marketing Agent</button>
+<button class="tab" onclick="switchAgent('ops')"><span class="dot" style="background:#1D9E75"></span>Ops Agent</button>
+<button class="tab" onclick="switchAgent('aeo')"><span class="dot" style="background:#BA7517"></span>AEO Agent</button>
+</div>
+
+<div class="panel">
+<div class="panel-header">
+<div class="icon" id="icon" style="background:rgba(226,75,74,.15)">💰</div>
+<div class="info"><h3 id="aname">Revenue Agent</h3><p id="adesc">Sales · Proposals · Pricing · Outreach · Follow-up</p></div>
+<div class="meta"><span class="badge" id="acount">25 prompts</span><span class="status">● Online</span></div>
+</div>
+<div class="chat" id="chat"></div>
+<div class="chips-area"><div class="chips-label">Try asking</div><div class="chips" id="chips"></div></div>
+<div class="input-area">
+<textarea id="input" placeholder="Describe what you need help with..." rows="1" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+<button class="send" id="sendbtn" onclick="send()">Send</button>
+</div>
+<div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
+</div>
+</div>
+
+<script>
+const WORKER='YOUR_WORKER_URL_HERE';
+const agents={
+revenue:{name:'Revenue Agent',desc:'Sales · Proposals · Pricing · Outreach · Follow-up',icon:'💰',bg:'rgba(226,75,74,.15)',init:'RA',count:'25 prompts',
+welcome:"I'm your Revenue Agent with all 25 Revenue Vault prompts loaded.\n\nTell me what you need — a proposal, follow-up, pricing conversation, or outreach — and I'll run the right prompt.\n\nWhat are you working on?",
+chips:['Write a proposal for a ghosted prospect','Handle a price objection','Write a referral request email','Build my dream client profile'],
+system:'You are the Revenue Agent for AgentPromptDesk CEO Prompt Vault. You are a senior B2B sales expert. You have 25 prompts: Discovery Call Prep, Objection Reversal, Ghosted Prospect Re-engage, 3-Angle Offer Generator, Follow-up Sequence, Proposal That Closes, Dream Client Identifier, Price Anchor Test, Lead Magnet Converter, Voice Memo to Proposal, Referral Request, Upsell Script, Cold Outreach, Testimonial Request, Warm Reactivation, Discovery Call Opener, Follow-Up Cadence, Win-Back Email, Scope Negotiator, Case Study Extractor, Meeting Prep, Gentle No Script, Price Raise Announcement, Closing Question. Identify the most relevant prompt for each situation and produce specific, immediately usable output. Ask for key details if needed. Be direct and operator-grade.'},
+marketing:{name:'Marketing Agent',desc:'Content · Copy · Carousels · Email · Ads',icon:'📣',bg:'rgba(55,138,221,.15)',init:'MA',count:'30 prompts',
+welcome:"I'm your Marketing Agent with all 30 Marketing Machine prompts loaded.\n\nI can write hooks, carousels, Reel scripts, threads, newsletters, email sequences, ad copy, DM scripts, and more.\n\nWhat are you creating?",
+chips:['Write 20 viral hooks for my next post','Build a 9-slide carousel','Write a Reel script','Create a 5-email launch sequence'],
+system:'You are the Marketing Agent for AgentPromptDesk CEO Prompt Vault. You are a world-class content strategist and copywriter for coaches and consultants. You have 30 prompts: Viral Hook Generator, Content Pillar System, Carousel Architect, Reel Script Generator, Thread Converter, Newsletter Writer, Repurposing Engine, Caption Surgeon, Lead Magnet Builder, Hashtag Researcher, Email Subject Line Lab, Sales Page Copy Engine, Opt-In Page Builder, Testimonial Transformer, Brand Voice Builder, Ad Copy Generator, DM Script Builder, Launch Email Sequence, Content Calendar Builder, Collaboration Pitch, Competitor Teardown, Podcast Pitch, Guest Post Outline, Story Post Generator, Niche Authority Post, Trending Topic Hijack, Long-Form Article Engine, Community Question Generator, Objection Content Creator, Year-In-Review Post. Identify the right prompt and produce specific platform-appropriate output. Voice: sharp, direct, zero fluff.'},
+ops:{name:'Ops Agent',desc:'SOPs · Systems · Hiring · Planning',icon:'⚙️',bg:'rgba(29,158,117,.15)',init:'OA',count:'20 prompts',
+welcome:"I'm your Ops Agent with all 20 Operations Engine prompts ready.\n\nI can build SOPs, hiring briefs, meeting agendas, email triage systems, decision logs, project kickoffs, systems audits, and more.\n\nWhat needs to get organized?",
+chips:['Write an SOP for my onboarding','Build a hiring brief for a VA','Run a systems audit','Create my weekly review template'],
+system:'You are the Ops Agent for AgentPromptDesk CEO Prompt Vault. You are a senior operations consultant for solo founders. You have 20 prompts: SOP Writer, Hiring Brief, Meeting Agenda Builder, Email Triage System, Weekly Review Template, Contractor Onboarding Kit, Decision Log, Project Kickoff Brief, Client Update Email, Offer Packaging System, Pricing Strategy Audit, Refund Response Script, Systems Audit, Revenue Forecast Model, Feedback Collector, Tool Stack Audit, Capacity Planner, Dispute Resolution Script, Quarterly Planning Session, End-of-Year Retrospective. Produce structured immediately usable output. Ask for context before generating.'},
+aeo:{name:'AEO Agent',desc:'ChatGPT · Perplexity · Google AI Overviews',icon:'🎯',bg:'rgba(186,117,23,.15)',init:'AA',count:'15 prompts',
+welcome:"I'm your AEO Agent with all 15 AEO Engine prompts loaded.\n\nI help you get cited by ChatGPT, Perplexity, and Google AI Overviews.\n\nWhat page or query do you want to optimize for?",
+chips:['Audit my homepage for AEO signals','Build my entity definition','Generate FAQ schema','Create my 90-day AEO plan'],
+system:'You are the AEO Agent for AgentPromptDesk CEO Prompt Vault. You specialize in Answer Engine Optimization. You have 15 prompts: AEO Site Audit, Answer-First Rewriter, FAQ Schema Builder, Citation Monitor, Entity Builder, Perplexity Optimizer, Google AI Overview Optimizer, Quotable Content Creator, Authority Source Builder, Competitor Citation Analyzer, AEO Content Calendar, Schema Markup Generator, AEO Monthly Review, Featured Snippet Hunter, AEO Quick Win Checklist. Give specific scores, fixes, and next steps. Be precise and technical.'}
+};
+
+let current='revenue';
+let msgs={revenue:[],marketing:[],ops:[],aeo:[]};
+let loading=false;
+
+function switchAgent(k){
+current=k;
+const a=agents[k];
+document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['revenue','marketing','ops','aeo'][i]===k));
+document.getElementById('icon').textContent=a.icon;
+document.getElementById('icon').style.background=a.bg;
+document.getElementById('aname').textContent=a.name;
+document.getElementById('adesc').textContent=a.desc;
+document.getElementById('acount').textContent=a.count;
+document.getElementById('chips').innerHTML=a.chips.map(c=>`<button class="chip" onclick="useChip('${c.replace(/'/g,"\\'")}'">${c}</button>`).join('');
+render();
+}
+
+function render(){
+const a=agents[current];
+const cw=document.getElementById('chat');
+const m=msgs[current];
+if(m.length===0){
+cw.innerHTML=`<div class="msg"><div class="avatar">${a.init}</div><div class="bubble">${a.welcome}</div></div>`;
+}else{
+cw.innerHTML=m.map(x=>`<div class="msg ${x.role==='user'?'user':''}"><div class="avatar">${x.role==='user'?'You':a.init}</div><div class="bubble">${x.content}</div></div>`).join('');
+}
+cw.scrollTop=cw.scrollHeight;
+}
+
+function useChip(t){document.getElementById('input').value=t;send();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+
+async function send(){
+if(loading)return;
+const inp=document.getElementById('input');
+const t=inp.value.trim();
+if(!t)return;
+inp.value='';inp.style.height='auto';
+loading=true;
+document.getElementById('sendbtn').disabled=true;
+msgs[current].push({role:'user',content:t});
+render();
+const cw=document.getElementById('chat');
+const ty=document.createElement('div');
+ty.className='msg';ty.id='typing';
+ty.innerHTML=`<div class="avatar">${agents[current].init}</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
+cw.appendChild(ty);cw.scrollTop=cw.scrollHeight;
+try{
+const r=await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:agents[current].system,messages:msgs[current].map(m=>({role:m.role,content:m.content}))})});
+const d=await r.json();
+const reply=d.content?.[0]?.text||'Something went wrong. Please try again.';
+document.getElementById('typing')?.remove();
+msgs[current].push({role:'assistant',content:reply});
+render();
+}catch(e){
+document.getElementById('typing')?.remove();
+msgs[current].push({role:'assistant',content:'Connection error. Please try again.'});
+render();
+}
+loading=false;
+document.getElementById('sendbtn').disabled=false;
+}
+
+switchAgent('revenue');
+</script>
+</body>
+</html>
