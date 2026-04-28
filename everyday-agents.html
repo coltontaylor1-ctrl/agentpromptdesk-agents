@@ -24,12 +24,9 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 .meta{margin-left:auto;display:flex;gap:8px;align-items:center}
 .badge{font-size:11px;color:#888;padding:3px 9px;border:1px solid #222;border-radius:20px}
 .status{font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(29,158,117,.15);color:#1D9E75}
-
-/* Message counter */
 .msg-counter{font-size:11px;color:#555;padding:3px 9px;border:1px solid #222;border-radius:20px;font-family:monospace;transition:color .3s}
 .msg-counter.warn{color:#F97316;border-color:rgba(249,115,22,.3)}
 .msg-counter.last{color:#E24B4A;border-color:rgba(226,75,74,.3)}
-
 .chat{height:360px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:14px;background:#0A0A0A;scroll-behavior:smooth}
 .chat::-webkit-scrollbar{width:3px}
 .chat::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
@@ -59,8 +56,7 @@ textarea:disabled{opacity:.4;cursor:not-allowed}
 .send:disabled{opacity:.4;cursor:not-allowed}
 .footer{font-size:11px;color:#333;text-align:center;padding:8px;border-top:1px solid #1A1A1A;background:#0D0D0D}
 .footer span{color:#F97316}
-
-/* ── PAYWALL OVERLAY ── */
+/* PAYWALL */
 .paywall{position:absolute;inset:0;background:rgba(10,10,10,.96);backdrop-filter:blur(8px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;z-index:100;border-radius:14px}
 .paywall.show{display:flex}
 .paywall-icon{font-size:36px;margin-bottom:16px}
@@ -80,7 +76,6 @@ textarea:disabled{opacity:.4;cursor:not-allowed}
 <span class="brand">AgentPromptDesk — The Everyday Vault</span>
 <h1>Your Personal Agents</h1>
 <p>Eight agents built for real situations. Pick yours and start talking.</p>
-
 <div class="tabs">
 <button class="tab active" onclick="switchAgent('scrambler')"><span class="dot" style="background:#E24B4A"></span>Scrambler</button>
 <button class="tab" onclick="switchAgent('jobseeker')"><span class="dot" style="background:#378ADD"></span>Job Seeker</button>
@@ -91,9 +86,7 @@ textarea:disabled{opacity:.4;cursor:not-allowed}
 <button class="tab" onclick="switchAgent('freelancer')"><span class="dot" style="background:#00BCD4"></span>Freelancer</button>
 <button class="tab" onclick="switchAgent('builder')"><span class="dot" style="background:#FFD700"></span>Builder</button>
 </div>
-
 <div class="panel">
-  <!-- Paywall overlay -->
   <div class="paywall" id="paywall">
     <div class="paywall-icon">⚡</div>
     <div class="paywall-eyebrow">Preview limit reached</div>
@@ -108,7 +101,6 @@ textarea:disabled{opacity:.4;cursor:not-allowed}
     <a class="paywall-btn" href="https://agentpromptdesk.gumroad.com/l/nlngx" target="_blank">Get the Full Vault — $47 →</a>
     <div class="paywall-note">One payment · No upsells · Instant access</div>
   </div>
-
   <div class="panel-header">
     <div class="icon" id="icon" style="background:rgba(226,75,74,.15)">🚨</div>
     <div class="info"><h3 id="aname">The Scrambler Agent</h3><p id="adesc">Your Emergency Financial Co-Pilot</p></div>
@@ -127,90 +119,51 @@ textarea:disabled{opacity:.4;cursor:not-allowed}
   <div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
 </div>
 </div>
-
 <script>
 var WORKER = 'https://agentpromptdesk-api.colton-trismart.workers.dev';
-var FREE_LIMIT = 3; // messages before paywall
+var FREE_LIMIT = 3;
+// localStorage key — total messages used across ALL agents and ALL sessions
+var LS_KEY = 'apd_total_used';
 
 var agents = {
-scrambler:{
-  name:'The Scrambler Agent',desc:'Your Emergency Financial Co-Pilot',
-  icon:'🚨',bg:'rgba(226,75,74,.15)',init:'SA',count:'8 prompts',
-  welcome:"I'm your Scrambler Agent — built for financial emergencies and fast action.\n\nTell me your situation: your current income, your biggest bill or problem, and one skill or asset you have. I'll triage it immediately and give you a ranked 14-day action plan.\n\nWhat's going on?",
-  chips:['I have no income and rent is due in 2 weeks','I need fast cash with no experience','Help me figure out my next move','Build me a 14-day action plan'],
-  system:'You are the Scrambler Agent for AgentPromptDesk Everyday Vault. You help people in financial emergencies get fast, specific, actionable plans. You are direct, practical, and zero-fluff. You never give generic advice. Everything you produce is based on the specific inputs the user gives you. You triage their situation, prioritize their next moves, and build a personalized fast-cash action plan. You specialize in: identifying the highest-leverage immediate actions, ranking daily tasks by impact, suggesting income sources based on existing skills, and providing day-by-day action plans. Always ask for current income, biggest bill/problem, and one skill or asset if not provided.'
-},
-jobseeker:{
-  name:'The Job Seeker Agent',desc:'Your Personal Hiring Coach',
-  icon:'💼',bg:'rgba(55,138,221,.15)',init:'JA',count:'8 prompts',
-  welcome:"I'm your Job Seeker Agent — built to get you callbacks and offers.\n\nPaste your resume or describe your current job search situation and I'll audit it immediately. I'll find exactly what's costing you callbacks and tell you what to fix first.\n\nWhat's your situation?",
-  chips:['Why am I not getting callbacks?','Audit my resume','Write me a cover letter hook','Help me prepare for an interview'],
-  system:'You are the Job Seeker Agent for AgentPromptDesk Everyday Vault. You help people get more callbacks, better interviews, and job offers. You audit resumes and job search approaches, identify the specific gaps costing people opportunities, and provide actionable fixes in priority order. You write cover letter hooks, help with interview prep, and create outreach messages. You are direct and honest — if something is weak you say so clearly. Always identify the top 3 weaknesses and give a recommended sequence of steps to fix them.'
-},
-escapee:{
-  name:'The Escapee Agent',desc:'Your Exit Strategy Architect',
-  icon:'🚪',bg:'rgba(29,158,117,.15)',init:'EA',count:'8 prompts',
-  welcome:"I'm your Escapee Agent — built to help you leave your 9-to-5 with a real plan.\n\nTell me: your current salary, savings runway, strongest skill, and target exit timeline. I'll calculate your minimum viable side income and build your escape plan.\n\nWhat are your numbers?",
-  chips:['How much do I need to quit?','Build me an exit timeline','What side income should I start?','Help me validate my business idea'],
-  system:'You are the Escapee Agent for AgentPromptDesk Everyday Vault. You help people escape their 9-to-5 jobs with realistic, specific exit strategies. You calculate minimum viable side income numbers, build realistic exit timelines, and sequence the steps needed to get there. You are grounded in reality — you do not give false hope, you give honest assessments and specific action steps. Always ask for current salary, savings runway, strongest skill, and target exit timeline if not provided. Produce a minimum viable side income number, a realistic exit timeline, and the first 3 steps to take this week.'
-},
-smallbiz:{
-  name:'The Biz Owner Agent',desc:'Your Overworked Business Brain',
-  icon:'🏪',bg:'rgba(155,89,182,.15)',init:'BA',count:'8 prompts',
-  welcome:"I'm your Biz Owner Agent — built to find your biggest leak and fix it today.\n\nTell me your biggest current problem: marketing, operations, clients, or cash flow. Then describe your situation and I'll diagnose it and generate one ready-to-use asset you can deploy today.\n\nWhat's your biggest problem right now?",
-  chips:['Find my biggest revenue leak','Write me a client email','Build an SOP for my process','Help me with my marketing'],
-  system:'You are the Biz Owner Agent for AgentPromptDesk Everyday Vault. You help small business owners who are overwhelmed find their biggest time and revenue leaks and fix them with specific, immediately deployable assets. You diagnose problems in marketing, operations, client management, and cash flow. You generate ready-to-use assets: emails, SOPs, social posts, scripts, and frameworks. You are practical and specific — no theory, only things they can use today. Always identify the biggest leak first, then generate one ready-to-use asset, then recommend next steps.'
-},
-creator:{
-  name:'The Creator Agent',desc:'Your Monetization Strategist',
-  icon:'🎨',bg:'rgba(249,115,22,.15)',init:'CA',count:'8 prompts',
-  welcome:"I'm your Creator Agent — built to help you monetize your audience.\n\nTell me: your platform, your niche, your audience size, and what people ask you for most. I'll identify your fastest path to revenue and give you a launch sequence plus a viral hook to test this week.\n\nWhat's your situation?",
-  chips:['What should I sell to my audience?','Give me a viral hook to test','Build me a launch sequence','How do I monetize my following?'],
-  system:'You are the Creator Agent for AgentPromptDesk Everyday Vault. You help content creators monetize their audiences with specific, actionable strategies. You identify the best-fit offer type based on their platform, niche, and audience behavior. You create 5-step launch sequences, write viral hooks to test demand, and build content strategies around monetization. You understand YouTube, Instagram, TikTok, X, newsletters, and podcasts. Always ask for platform, niche, audience size, and what people ask for most if not provided. Produce a best-fit offer recommendation, a launch sequence, and one viral hook to test this week.'
-},
-caregiver:{
-  name:'The Caregiver Agent',desc:'Your Mental Load Manager',
-  icon:'🧡',bg:'rgba(233,30,140,.15)',init:'CGA',count:'8 prompts',
-  welcome:"I'm your Caregiver Agent — built to take the mental load off your plate.\n\nDump everything you're managing this week — all of it. I'll organize it into urgent today, this week, delegate, and drop. Then I'll generate the one script you need most right now.\n\nWhat's on your plate?",
-  chips:['Here is everything I need to manage this week','Write me a school email','Help me make a budget plan','I am overwhelmed — help me prioritize'],
-  system:'You are the Caregiver Agent for AgentPromptDesk Everyday Vault. You help parents and caregivers manage overwhelming mental loads with clear prioritization and ready-to-use scripts. When someone dumps everything they are managing, you sort it into: Urgent Today, This Week, Delegate, and Drop. Then you generate the one script they need most — a school email, budget plan, family meeting agenda, medical appointment summary, or whatever fits their situation. You are warm but efficient. You do not overwhelm them with more tasks — you simplify. Always end with the top 3 time-saving prompts for their situation.'
-},
-freelancer:{
-  name:'The Freelancer Agent',desc:'Your Business of One Advisor',
-  icon:'💻',bg:'rgba(0,188,212,.15)',init:'FA',count:'8 prompts',
-  welcome:"I'm your Freelancer Agent — built to help you earn more and deal with less nonsense.\n\nTell me: your current rate, your services, and your biggest problem — pricing, scope creep, inconsistent clients, or late payments. I'll audit your setup and write you one email you can send today.\n\nWhat's going on?",
-  chips:['Am I undercharging?','Write me a scope creep email','Help me raise my rates','I have a client not paying'],
-  system:'You are the Freelancer Agent for AgentPromptDesk Everyday Vault. You help freelancers and independent contractors build sustainable, profitable businesses of one. You audit rates against market standards, identify revenue and boundary leaks, and generate ready-to-send emails for difficult situations: scope creep, late payment, rate increases, and client offboarding. You are direct and do not sugarcoat — if someone is undercharging you tell them exactly by how much and why. Always produce a rate audit verdict, one ready-to-send email, and a recommended prompt sequence for their situation.'
-},
-builder:{
-  name:'The Builder Agent',desc:'Your Brutally Honest Co-Founder',
-  icon:'⚡',bg:'rgba(255,215,0,.15)',init:'BLA',count:'8 prompts',
-  welcome:"I'm your Builder Agent — I stress-test ideas so you don't waste months building the wrong thing.\n\nTell me your idea, who it's for, and what they do today instead of using your tool. I'll run a 5-point viability check, give you an honest verdict, and scope the MVP to what actually matters.\n\nWhat are you building?",
-  chips:['Stress test my idea','What should my MVP be?','Is there a market for this?','Help me validate before I build'],
-  system:'You are the Builder Agent for AgentPromptDesk Everyday Vault. You are a brutally honest co-founder who stress-tests product ideas against 5 viability signals: problem clarity, market size, willingness to pay, competitive advantage, and distribution strategy. You do not encourage bad ideas — you give honest verdicts including kill signals when they exist. You scope MVPs down to the single most important feature. You identify what to build first and what to cut. You are direct, specific, and founder-minded. Always run the 5-point viability check, give an honest verdict, scope the MVP to one core feature, and provide the first 3 prompts to move forward.'
-}
+scrambler:{name:'The Scrambler Agent',desc:'Your Emergency Financial Co-Pilot',icon:'🚨',bg:'rgba(226,75,74,.15)',init:'SA',count:'8 prompts',welcome:"I'm your Scrambler Agent — built for financial emergencies and fast action.\n\nTell me your situation: your current income, your biggest bill or problem, and one skill or asset you have. I'll triage it immediately and give you a ranked 14-day action plan.\n\nWhat's going on?",chips:['I have no income and rent is due in 2 weeks','I need fast cash with no experience','Help me figure out my next move','Build me a 14-day action plan'],system:'You are the Scrambler Agent for AgentPromptDesk Everyday Vault. You help people in financial emergencies get fast, specific, actionable plans. You are direct, practical, and zero-fluff. You never give generic advice. Everything you produce is based on the specific inputs the user gives you. You triage their situation, prioritize their next moves, and build a personalized fast-cash action plan. You specialize in: identifying the highest-leverage immediate actions, ranking daily tasks by impact, suggesting income sources based on existing skills, and providing day-by-day action plans. Always ask for current income, biggest bill/problem, and one skill or asset if not provided.'},
+jobseeker:{name:'The Job Seeker Agent',desc:'Your Personal Hiring Coach',icon:'💼',bg:'rgba(55,138,221,.15)',init:'JA',count:'8 prompts',welcome:"I'm your Job Seeker Agent — built to get you callbacks and offers.\n\nPaste your resume or describe your current job search situation and I'll audit it immediately. I'll find exactly what's costing you callbacks and tell you what to fix first.\n\nWhat's your situation?",chips:['Why am I not getting callbacks?','Audit my resume','Write me a cover letter hook','Help me prepare for an interview'],system:'You are the Job Seeker Agent for AgentPromptDesk Everyday Vault. You help people get more callbacks, better interviews, and job offers. You audit resumes and job search approaches, identify the specific gaps costing people opportunities, and provide actionable fixes in priority order. You write cover letter hooks, help with interview prep, and create outreach messages. You are direct and honest — if something is weak you say so clearly. Always identify the top 3 weaknesses and give a recommended sequence of steps to fix them.'},
+escapee:{name:'The Escapee Agent',desc:'Your Exit Strategy Architect',icon:'🚪',bg:'rgba(29,158,117,.15)',init:'EA',count:'8 prompts',welcome:"I'm your Escapee Agent — built to help you leave your 9-to-5 with a real plan.\n\nTell me: your current salary, savings runway, strongest skill, and target exit timeline. I'll calculate your minimum viable side income and build your escape plan.\n\nWhat are your numbers?",chips:['How much do I need to quit?','Build me an exit timeline','What side income should I start?','Help me validate my business idea'],system:'You are the Escapee Agent for AgentPromptDesk Everyday Vault. You help people escape their 9-to-5 jobs with realistic, specific exit strategies. You calculate minimum viable side income numbers, build realistic exit timelines, and sequence the steps needed to get there. You are grounded in reality — you do not give false hope, you give honest assessments and specific action steps. Always ask for current salary, savings runway, strongest skill, and target exit timeline if not provided. Produce a minimum viable side income number, a realistic exit timeline, and the first 3 steps to take this week.'},
+smallbiz:{name:'The Biz Owner Agent',desc:'Your Overworked Business Brain',icon:'🏪',bg:'rgba(155,89,182,.15)',init:'BA',count:'8 prompts',welcome:"I'm your Biz Owner Agent — built to find your biggest leak and fix it today.\n\nTell me your biggest current problem: marketing, operations, clients, or cash flow. Then describe your situation and I'll diagnose it and generate one ready-to-use asset you can deploy today.\n\nWhat's your biggest problem right now?",chips:['Find my biggest revenue leak','Write me a client email','Build an SOP for my process','Help me with my marketing'],system:'You are the Biz Owner Agent for AgentPromptDesk Everyday Vault. You help small business owners who are overwhelmed find their biggest time and revenue leaks and fix them with specific, immediately deployable assets. You diagnose problems in marketing, operations, client management, and cash flow. You generate ready-to-use assets: emails, SOPs, social posts, scripts, and frameworks. You are practical and specific — no theory, only things they can use today. Always identify the biggest leak first, then generate one ready-to-use asset, then recommend next steps.'},
+creator:{name:'The Creator Agent',desc:'Your Monetization Strategist',icon:'🎨',bg:'rgba(249,115,22,.15)',init:'CA',count:'8 prompts',welcome:"I'm your Creator Agent — built to help you monetize your audience.\n\nTell me: your platform, your niche, your audience size, and what people ask you for most. I'll identify your fastest path to revenue and give you a launch sequence plus a viral hook to test this week.\n\nWhat's your situation?",chips:['What should I sell to my audience?','Give me a viral hook to test','Build me a launch sequence','How do I monetize my following?'],system:'You are the Creator Agent for AgentPromptDesk Everyday Vault. You help content creators monetize their audiences with specific, actionable strategies. You identify the best-fit offer type based on their platform, niche, and audience behavior. You create 5-step launch sequences, write viral hooks to test demand, and build content strategies around monetization. You understand YouTube, Instagram, TikTok, X, newsletters, and podcasts. Always ask for platform, niche, audience size, and what people ask for most if not provided. Produce a best-fit offer recommendation, a launch sequence, and one viral hook to test this week.'},
+caregiver:{name:'The Caregiver Agent',desc:'Your Mental Load Manager',icon:'🧡',bg:'rgba(233,30,140,.15)',init:'CGA',count:'8 prompts',welcome:"I'm your Caregiver Agent — built to take the mental load off your plate.\n\nDump everything you're managing this week — all of it. I'll organize it into urgent today, this week, delegate, and drop. Then I'll generate the one script you need most right now.\n\nWhat's on your plate?",chips:['Here is everything I need to manage this week','Write me a school email','Help me make a budget plan','I am overwhelmed — help me prioritize'],system:'You are the Caregiver Agent for AgentPromptDesk Everyday Vault. You help parents and caregivers manage overwhelming mental loads with clear prioritization and ready-to-use scripts. When someone dumps everything they are managing, you sort it into: Urgent Today, This Week, Delegate, and Drop. Then you generate the one script they need most — a school email, budget plan, family meeting agenda, medical appointment summary, or whatever fits their situation. You are warm but efficient. You do not overwhelm them with more tasks — you simplify. Always end with the top 3 time-saving prompts for their situation.'},
+freelancer:{name:'The Freelancer Agent',desc:'Your Business of One Advisor',icon:'💻',bg:'rgba(0,188,212,.15)',init:'FA',count:'8 prompts',welcome:"I'm your Freelancer Agent — built to help you earn more and deal with less nonsense.\n\nTell me: your current rate, your services, and your biggest problem — pricing, scope creep, inconsistent clients, or late payments. I'll audit your setup and write you one email you can send today.\n\nWhat's going on?",chips:['Am I undercharging?','Write me a scope creep email','Help me raise my rates','I have a client not paying'],system:'You are the Freelancer Agent for AgentPromptDesk Everyday Vault. You help freelancers and independent contractors build sustainable, profitable businesses of one. You audit rates against market standards, identify revenue and boundary leaks, and generate ready-to-send emails for difficult situations: scope creep, late payment, rate increases, and client offboarding. You are direct and do not sugarcoat — if someone is undercharging you tell them exactly by how much and why. Always produce a rate audit verdict, one ready-to-send email, and a recommended prompt sequence for their situation.'},
+builder:{name:'The Builder Agent',desc:'Your Brutally Honest Co-Founder',icon:'⚡',bg:'rgba(255,215,0,.15)',init:'BLA',count:'8 prompts',welcome:"I'm your Builder Agent — I stress-test ideas so you don't waste months building the wrong thing.\n\nTell me your idea, who it's for, and what they do today instead of using your tool. I'll run a 5-point viability check, give you an honest verdict, and scope the MVP to what actually matters.\n\nWhat are you building?",chips:['Stress test my idea','What should my MVP be?','Is there a market for this?','Help me validate before I build'],system:'You are the Builder Agent for AgentPromptDesk Everyday Vault. You are a brutally honest co-founder who stress-tests product ideas against 5 viability signals: problem clarity, market size, willingness to pay, competitive advantage, and distribution strategy. You do not encourage bad ideas — you give honest verdicts including kill signals when they exist. You scope MVPs down to the single most important feature. You identify what to build first and what to cut. You are direct, specific, and founder-minded. Always run the 5-point viability check, give an honest verdict, scope the MVP to one core feature, and provide the first 3 prompts to move forward.'}
 };
 
 var current = 'scrambler';
-var msgs = {scrambler:[],jobseeker:[],escapee:[],smallbiz:[],creator:[],caregiver:[],freelancer:[],builder:[]};
-var msgCounts = {scrambler:0,jobseeker:0,escapee:0,smallbiz:0,creator:0,caregiver:0,freelancer:0,builder:0};
+var sessionMsgs = {scrambler:[],jobseeker:[],escapee:[],smallbiz:[],creator:[],caregiver:[],freelancer:[],builder:[]};
 var loading = false;
 
-function getRemaining() {
-  return Math.max(0, FREE_LIMIT - msgCounts[current]);
+// ── localStorage helpers ──────────────────────────────
+function getTotalUsed() {
+  try { return parseInt(localStorage.getItem(LS_KEY) || '0', 10); } catch(e) { return 0; }
+}
+function incrementTotal() {
+  try { localStorage.setItem(LS_KEY, getTotalUsed() + 1); } catch(e) {}
+}
+function isLimitHit() {
+  return getTotalUsed() >= FREE_LIMIT;
 }
 
+// ── Counter UI ────────────────────────────────────────
 function updateCounter() {
-  var rem = getRemaining();
+  var used = getTotalUsed();
+  var rem = Math.max(0, FREE_LIMIT - used);
   var el = document.getElementById('msg-counter');
   if (rem <= 0) {
     el.textContent = 'Preview ended';
     el.className = 'msg-counter last';
   } else if (rem === 1) {
-    el.textContent = rem + ' message left';
+    el.textContent = '1 message left';
     el.className = 'msg-counter last';
-  } else if (rem === FREE_LIMIT) {
-    el.textContent = rem + ' free messages';
+  } else if (used === 0) {
+    el.textContent = FREE_LIMIT + ' free messages';
     el.className = 'msg-counter';
   } else {
     el.textContent = rem + ' messages left';
@@ -218,20 +171,22 @@ function updateCounter() {
   }
 }
 
-function showPaywall() {
-  document.getElementById('paywall').classList.add('show');
+function lockInput() {
   document.getElementById('input').disabled = true;
   document.getElementById('sendbtn').disabled = true;
 }
 
+function showPaywall() {
+  document.getElementById('paywall').classList.add('show');
+  lockInput();
+}
+
+// ── Agent switcher ────────────────────────────────────
 function switchAgent(k) {
   current = k;
   var a = agents[k];
   var keys = ['scrambler','jobseeker','escapee','smallbiz','creator','caregiver','freelancer','builder'];
-  var tabs = document.querySelectorAll('.tab');
-  for (var i = 0; i < tabs.length; i++) {
-    tabs[i].classList.toggle('active', keys[i] === k);
-  }
+  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', keys[i]===k); });
   document.getElementById('icon').textContent = a.icon;
   document.getElementById('icon').style.background = a.bg;
   document.getElementById('aname').textContent = a.name;
@@ -239,96 +194,99 @@ function switchAgent(k) {
   document.getElementById('acount').textContent = a.count;
   var chipsEl = document.getElementById('chips');
   chipsEl.innerHTML = '';
-  for (var j = 0; j < a.chips.length; j++) {
+  a.chips.forEach(function(txt){
     var btn = document.createElement('button');
     btn.className = 'chip';
-    btn.textContent = a.chips[j];
-    btn.onclick = (function(t){return function(){useChip(t)}})(a.chips[j]);
+    btn.textContent = txt;
+    btn.onclick = function(){ useChip(txt); };
     chipsEl.appendChild(btn);
-  }
-  // Reset paywall state for this agent if they haven't hit limit
-  if (getRemaining() > 0) {
+  });
+  updateCounter();
+  // Always check limit on switch — covers refresh case
+  if (isLimitHit()) {
+    showPaywall();
+  } else {
     document.getElementById('paywall').classList.remove('show');
     document.getElementById('input').disabled = false;
     document.getElementById('sendbtn').disabled = false;
-  } else {
-    showPaywall();
   }
-  updateCounter();
   render();
 }
 
+// ── Chat render ───────────────────────────────────────
 function render() {
   var a = agents[current];
   var cw = document.getElementById('chat');
-  var m = msgs[current];
+  var m = sessionMsgs[current];
   if (m.length === 0) {
-    cw.innerHTML = '<div class="msg"><div class="avatar">' + a.init + '</div><div class="bubble">' + a.welcome + '</div></div>';
+    cw.innerHTML = '<div class="msg"><div class="avatar">'+a.init+'</div><div class="bubble">'+a.welcome+'</div></div>';
   } else {
-    var html = '';
-    for (var i = 0; i < m.length; i++) {
-      html += '<div class="msg ' + (m[i].role==='user'?'user':'') + '"><div class="avatar">' + (m[i].role==='user'?'You':a.init) + '</div><div class="bubble">' + m[i].content + '</div></div>';
-    }
-    cw.innerHTML = html;
+    cw.innerHTML = m.map(function(msg){
+      return '<div class="msg '+(msg.role==='user'?'user':'')+'"><div class="avatar">'+(msg.role==='user'?'You':a.init)+'</div><div class="bubble">'+msg.content+'</div></div>';
+    }).join('');
   }
   cw.scrollTop = cw.scrollHeight;
 }
 
 function useChip(t) {
-  if (getRemaining() <= 0) { showPaywall(); return; }
+  if (isLimitHit()) { showPaywall(); return; }
   document.getElementById('input').value = t;
   send();
 }
-
-function handleKey(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
+// ── Send ──────────────────────────────────────────────
 function send() {
   if (loading) return;
-  if (getRemaining() <= 0) { showPaywall(); return; }
+  // Hard check against localStorage BEFORE sending
+  if (isLimitHit()) { showPaywall(); return; }
   var inp = document.getElementById('input');
   var t = inp.value.trim();
   if (!t) return;
   inp.value = ''; inp.style.height = 'auto';
   loading = true;
   document.getElementById('sendbtn').disabled = true;
-  msgCounts[current]++;
+
+  // Increment BEFORE the API call so a refresh during loading still counts it
+  incrementTotal();
   updateCounter();
-  msgs[current].push({role:'user',content:t});
+
+  sessionMsgs[current].push({role:'user',content:t});
   render();
   var cw = document.getElementById('chat');
   var ty = document.createElement('div');
-  ty.className = 'msg'; ty.id = 'typing';
-  ty.innerHTML = '<div class="avatar">' + agents[current].init + '</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
-  cw.appendChild(ty); cw.scrollTop = cw.scrollHeight;
+  ty.className='msg'; ty.id='typing';
+  ty.innerHTML='<div class="avatar">'+agents[current].init+'</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  cw.appendChild(ty); cw.scrollTop=cw.scrollHeight;
+
   var payload = {system:agents[current].system, messages:[]};
-  for (var i = 0; i < msgs[current].length; i++) {
-    payload.messages.push({role:msgs[current][i].role, content:msgs[current][i].content});
-  }
-  fetch(WORKER, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+  sessionMsgs[current].forEach(function(msg){ payload.messages.push({role:msg.role,content:msg.content}); });
+
+  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
   .then(function(r){return r.json();})
   .then(function(d){
-    var el = document.getElementById('typing'); if(el) el.remove();
-    var reply = (d.content&&d.content[0]&&d.content[0].text)?d.content[0].text:'Something went wrong. Please try again.';
-    msgs[current].push({role:'assistant',content:reply});
+    var el=document.getElementById('typing'); if(el)el.remove();
+    var reply=(d.content&&d.content[0]&&d.content[0].text)?d.content[0].text:'Something went wrong. Please try again.';
+    sessionMsgs[current].push({role:'assistant',content:reply});
     render();
-    loading = false;
-    if (getRemaining() <= 0) {
-      // Show paywall after last reply is rendered
-      setTimeout(showPaywall, 800);
+    loading=false;
+    if (isLimitHit()) {
+      setTimeout(showPaywall, 900);
     } else {
-      document.getElementById('sendbtn').disabled = false;
+      document.getElementById('sendbtn').disabled=false;
     }
   })
   .catch(function(e){
-    var el = document.getElementById('typing'); if(el) el.remove();
-    msgs[current].push({role:'assistant',content:'Connection error: ' + e.message});
+    var el=document.getElementById('typing'); if(el)el.remove();
+    sessionMsgs[current].push({role:'assistant',content:'Connection error: '+e.message});
     render();
-    loading = false;
-    document.getElementById('sendbtn').disabled = false;
+    loading=false;
+    if (!isLimitHit()) document.getElementById('sendbtn').disabled=false;
   });
 }
 
+// ── Init ──────────────────────────────────────────────
 switchAgent('scrambler');
 </script>
 </body>
