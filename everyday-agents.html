@@ -16,7 +16,7 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 .tab:hover{background:#1A1A1A;color:#F5F5F5}
 .tab.active{background:#1A1A1A;color:#F5F5F5;border-color:#333}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.panel{background:#111;border:1px solid #222;border-radius:14px;overflow:hidden}
+.panel{background:#111;border:1px solid #222;border-radius:14px;overflow:hidden;position:relative}
 .panel-header{padding:1rem 1.25rem;border-bottom:1px solid #1A1A1A;display:flex;align-items:center;gap:10px;background:#0D0D0D}
 .icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .info h3{font-size:14px;font-weight:600;margin:0}
@@ -24,6 +24,12 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 .meta{margin-left:auto;display:flex;gap:8px;align-items:center}
 .badge{font-size:11px;color:#888;padding:3px 9px;border:1px solid #222;border-radius:20px}
 .status{font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(29,158,117,.15);color:#1D9E75}
+
+/* Message counter */
+.msg-counter{font-size:11px;color:#555;padding:3px 9px;border:1px solid #222;border-radius:20px;font-family:monospace;transition:color .3s}
+.msg-counter.warn{color:#F97316;border-color:rgba(249,115,22,.3)}
+.msg-counter.last{color:#E24B4A;border-color:rgba(226,75,74,.3)}
+
 .chat{height:360px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:14px;background:#0A0A0A;scroll-behavior:smooth}
 .chat::-webkit-scrollbar{width:3px}
 .chat::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
@@ -47,11 +53,26 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 textarea{flex:1;resize:none;border:1px solid #222;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;background:#111;color:#F5F5F5;min-height:42px;max-height:120px;line-height:1.5}
 textarea:focus{outline:none;border-color:#333}
 textarea::placeholder{color:#555}
+textarea:disabled{opacity:.4;cursor:not-allowed}
 .send{padding:10px 16px;background:#F97316;color:#0A0A0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
 .send:hover{background:#EA6C0A}
 .send:disabled{opacity:.4;cursor:not-allowed}
 .footer{font-size:11px;color:#333;text-align:center;padding:8px;border-top:1px solid #1A1A1A;background:#0D0D0D}
 .footer span{color:#F97316}
+
+/* ── PAYWALL OVERLAY ── */
+.paywall{position:absolute;inset:0;background:rgba(10,10,10,.96);backdrop-filter:blur(8px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;z-index:100;border-radius:14px}
+.paywall.show{display:flex}
+.paywall-icon{font-size:36px;margin-bottom:16px}
+.paywall-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#F97316;margin-bottom:10px;font-family:monospace}
+.paywall-title{font-size:20px;font-weight:700;color:#F5F5F5;margin-bottom:10px;letter-spacing:-.02em;line-height:1.25}
+.paywall-sub{font-size:13px;color:#888;margin-bottom:24px;max-width:380px;line-height:1.65}
+.paywall-features{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;text-align:left;width:100%;max-width:340px}
+.paywall-feature{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#ccc;line-height:1.45}
+.paywall-feature-dot{width:5px;height:5px;background:#F97316;border-radius:50%;margin-top:5px;flex-shrink:0}
+.paywall-btn{display:block;width:100%;max-width:340px;padding:14px 24px;background:#F97316;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;text-decoration:none;transition:opacity .15s;margin-bottom:10px}
+.paywall-btn:hover{opacity:.88}
+.paywall-note{font-size:11px;color:#444;font-family:monospace;letter-spacing:.05em}
 </style>
 </head>
 <body>
@@ -72,23 +93,44 @@ textarea::placeholder{color:#555}
 </div>
 
 <div class="panel">
-<div class="panel-header">
-<div class="icon" id="icon" style="background:rgba(226,75,74,.15)">🚨</div>
-<div class="info"><h3 id="aname">The Scrambler Agent</h3><p id="adesc">Your Emergency Financial Co-Pilot</p></div>
-<div class="meta"><span class="badge" id="acount">8 prompts</span><span class="status">● Online</span></div>
-</div>
-<div class="chat" id="chat"></div>
-<div class="chips-area"><div class="chips-label">Try asking</div><div class="chips" id="chips"></div></div>
-<div class="input-area">
-<textarea id="input" placeholder="Describe your situation..." rows="1" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
-<button class="send" id="sendbtn" onclick="send()">Send</button>
-</div>
-<div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
+  <!-- Paywall overlay -->
+  <div class="paywall" id="paywall">
+    <div class="paywall-icon">⚡</div>
+    <div class="paywall-eyebrow">Preview limit reached</div>
+    <div class="paywall-title">You've seen what this agent can do.<br>Unlock the full system.</div>
+    <div class="paywall-sub">The Agent Prompt Desk Vault gives you all 8 agents with unlimited access — plus 154 structured prompts across every business function.</div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>Unlimited conversations with all 8 agents</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>154 RCTF/AEO-structured prompts across 8 categories</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>12 ready-to-deploy complete AI agents</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>Lifetime access — one payment, no subscription</div>
+    </div>
+    <a class="paywall-btn" href="https://agentpromptdesk.gumroad.com/l/nlngx" target="_blank">Get the Full Vault — $47 →</a>
+    <div class="paywall-note">One payment · No upsells · Instant access</div>
+  </div>
+
+  <div class="panel-header">
+    <div class="icon" id="icon" style="background:rgba(226,75,74,.15)">🚨</div>
+    <div class="info"><h3 id="aname">The Scrambler Agent</h3><p id="adesc">Your Emergency Financial Co-Pilot</p></div>
+    <div class="meta">
+      <span class="badge" id="acount">8 prompts</span>
+      <span class="msg-counter" id="msg-counter">3 free messages</span>
+      <span class="status">● Online</span>
+    </div>
+  </div>
+  <div class="chat" id="chat"></div>
+  <div class="chips-area"><div class="chips-label">Try asking</div><div class="chips" id="chips"></div></div>
+  <div class="input-area">
+    <textarea id="input" placeholder="Describe your situation..." rows="1" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+    <button class="send" id="sendbtn" onclick="send()">Send</button>
+  </div>
+  <div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
 </div>
 </div>
 
 <script>
 var WORKER = 'https://agentpromptdesk-api.colton-trismart.workers.dev';
+var FREE_LIMIT = 3; // messages before paywall
 
 var agents = {
 scrambler:{
@@ -151,7 +193,36 @@ builder:{
 
 var current = 'scrambler';
 var msgs = {scrambler:[],jobseeker:[],escapee:[],smallbiz:[],creator:[],caregiver:[],freelancer:[],builder:[]};
+var msgCounts = {scrambler:0,jobseeker:0,escapee:0,smallbiz:0,creator:0,caregiver:0,freelancer:0,builder:0};
 var loading = false;
+
+function getRemaining() {
+  return Math.max(0, FREE_LIMIT - msgCounts[current]);
+}
+
+function updateCounter() {
+  var rem = getRemaining();
+  var el = document.getElementById('msg-counter');
+  if (rem <= 0) {
+    el.textContent = 'Preview ended';
+    el.className = 'msg-counter last';
+  } else if (rem === 1) {
+    el.textContent = rem + ' message left';
+    el.className = 'msg-counter last';
+  } else if (rem === FREE_LIMIT) {
+    el.textContent = rem + ' free messages';
+    el.className = 'msg-counter';
+  } else {
+    el.textContent = rem + ' messages left';
+    el.className = 'msg-counter warn';
+  }
+}
+
+function showPaywall() {
+  document.getElementById('paywall').classList.add('show');
+  document.getElementById('input').disabled = true;
+  document.getElementById('sendbtn').disabled = true;
+}
 
 function switchAgent(k) {
   current = k;
@@ -175,6 +246,15 @@ function switchAgent(k) {
     btn.onclick = (function(t){return function(){useChip(t)}})(a.chips[j]);
     chipsEl.appendChild(btn);
   }
+  // Reset paywall state for this agent if they haven't hit limit
+  if (getRemaining() > 0) {
+    document.getElementById('paywall').classList.remove('show');
+    document.getElementById('input').disabled = false;
+    document.getElementById('sendbtn').disabled = false;
+  } else {
+    showPaywall();
+  }
+  updateCounter();
   render();
 }
 
@@ -194,18 +274,26 @@ function render() {
   cw.scrollTop = cw.scrollHeight;
 }
 
-function useChip(t) { document.getElementById('input').value = t; send(); }
+function useChip(t) {
+  if (getRemaining() <= 0) { showPaywall(); return; }
+  document.getElementById('input').value = t;
+  send();
+}
+
 function handleKey(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
 function send() {
   if (loading) return;
+  if (getRemaining() <= 0) { showPaywall(); return; }
   var inp = document.getElementById('input');
   var t = inp.value.trim();
   if (!t) return;
   inp.value = ''; inp.style.height = 'auto';
   loading = true;
   document.getElementById('sendbtn').disabled = true;
+  msgCounts[current]++;
+  updateCounter();
   msgs[current].push({role:'user',content:t});
   render();
   var cw = document.getElementById('chat');
@@ -225,7 +313,12 @@ function send() {
     msgs[current].push({role:'assistant',content:reply});
     render();
     loading = false;
-    document.getElementById('sendbtn').disabled = false;
+    if (getRemaining() <= 0) {
+      // Show paywall after last reply is rendered
+      setTimeout(showPaywall, 800);
+    } else {
+      document.getElementById('sendbtn').disabled = false;
+    }
   })
   .catch(function(e){
     var el = document.getElementById('typing'); if(el) el.remove();
