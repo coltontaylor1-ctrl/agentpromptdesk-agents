@@ -15,7 +15,7 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 .tab:hover{background:#1A1A1A;color:#F5F5F5}
 .tab.active{background:#1A1A1A;color:#F5F5F5;border-color:#333}
 .dot{width:8px;height:8px;border-radius:50%}
-.panel{background:#111;border:1px solid #222;border-radius:14px;overflow:hidden}
+.panel{background:#111;border:1px solid #222;border-radius:14px;overflow:hidden;position:relative}
 .panel-header{padding:1rem 1.25rem;border-bottom:1px solid #1A1A1A;display:flex;align-items:center;gap:10px;background:#0D0D0D}
 .icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
 .info h3{font-size:14px;font-weight:600;margin:0}
@@ -23,6 +23,9 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 .meta{margin-left:auto;display:flex;gap:8px;align-items:center}
 .badge{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid #222;color:#888}
 .status{font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(29,158,117,.15);color:#1D9E75}
+.msg-counter{font-size:11px;color:#555;padding:3px 9px;border:1px solid #222;border-radius:20px;font-family:monospace;transition:color .3s}
+.msg-counter.warn{color:#F97316;border-color:rgba(249,115,22,.3)}
+.msg-counter.last{color:#E24B4A;border-color:rgba(226,75,74,.3)}
 .chat{height:360px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:14px;background:#0A0A0A}
 .msg{display:flex;gap:8px;max-width:86%}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
@@ -44,11 +47,25 @@ p{color:#888;font-size:14px;margin-bottom:1.5rem}
 textarea{flex:1;resize:none;border:1px solid #222;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;background:#111;color:#F5F5F5;min-height:42px;max-height:120px;line-height:1.5}
 textarea:focus{outline:none;border-color:#333}
 textarea::placeholder{color:#555}
+textarea:disabled{opacity:.4;cursor:not-allowed}
 .send{padding:10px 18px;background:#F97316;color:#0A0A0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
 .send:hover{background:#EA6C0A}
 .send:disabled{opacity:.4;cursor:not-allowed}
 .footer{font-size:11px;color:#333;text-align:center;padding:8px;border-top:1px solid #1A1A1A;background:#0D0D0D}
 .footer span{color:#F97316}
+/* PAYWALL */
+.paywall{position:absolute;inset:0;background:rgba(10,10,10,.96);backdrop-filter:blur(8px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;z-index:100;border-radius:14px}
+.paywall.show{display:flex}
+.paywall-icon{font-size:36px;margin-bottom:16px}
+.paywall-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#F97316;margin-bottom:10px;font-family:monospace}
+.paywall-title{font-size:20px;font-weight:700;color:#F5F5F5;margin-bottom:10px;letter-spacing:-.02em;line-height:1.25}
+.paywall-sub{font-size:13px;color:#888;margin-bottom:24px;max-width:380px;line-height:1.65}
+.paywall-features{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;text-align:left;width:100%;max-width:340px}
+.paywall-feature{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#ccc;line-height:1.45}
+.paywall-feature-dot{width:5px;height:5px;background:#F97316;border-radius:50%;margin-top:5px;flex-shrink:0}
+.paywall-btn{display:block;width:100%;max-width:340px;padding:14px 24px;background:#F97316;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;text-decoration:none;transition:opacity .15s;margin-bottom:10px}
+.paywall-btn:hover{opacity:.88}
+.paywall-note{font-size:11px;color:#444;font-family:monospace;letter-spacing:.05em}
 </style>
 </head>
 <body>
@@ -63,166 +80,170 @@ textarea::placeholder{color:#555}
 <button class="tab" onclick="switchAgent('aeo')"><span class="dot" style="background:#BA7517"></span>AEO Agent</button>
 </div>
 <div class="panel">
-<div class="panel-header">
-<div class="icon" id="icon" style="background:rgba(226,75,74,.15)">💰</div>
-<div class="info"><h3 id="aname">Revenue Agent</h3><p id="adesc">Sales · Proposals · Pricing · Outreach · Follow-up</p></div>
-<div class="meta"><span class="badge" id="acount">25 prompts</span><span class="status">● Online</span></div>
+  <!-- Paywall overlay -->
+  <div class="paywall" id="paywall">
+    <div class="paywall-icon">⚡</div>
+    <div class="paywall-eyebrow">Preview limit reached</div>
+    <div class="paywall-title">You've seen what this agent can do.<br>Unlock the full system.</div>
+    <div class="paywall-sub">The Agent Prompt Desk Vault gives you all agents with unlimited access — plus 154 structured prompts across every business function.</div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>Unlimited conversations with all agents</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>154 RCTF/AEO-structured prompts across 8 categories</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>12 ready-to-deploy complete AI agents</div>
+      <div class="paywall-feature"><div class="paywall-feature-dot"></div>Lifetime access — one payment, no subscription</div>
+    </div>
+    <a class="paywall-btn" href="https://agentpromptdesk.gumroad.com/l/nlngx" target="_blank">Get the Full Vault — $47 →</a>
+    <div class="paywall-note">One payment · No upsells · Instant access</div>
+  </div>
+
+  <div class="panel-header">
+    <div class="icon" id="icon" style="background:rgba(226,75,74,.15)">💰</div>
+    <div class="info"><h3 id="aname">Revenue Agent</h3><p id="adesc">Sales · Proposals · Pricing · Outreach · Follow-up</p></div>
+    <div class="meta">
+      <span class="badge" id="acount">25 prompts</span>
+      <span class="msg-counter" id="msg-counter">3 free messages</span>
+      <span class="status">● Online</span>
+    </div>
+  </div>
+  <div class="chat" id="chat"></div>
+  <div class="chips-area"><div class="chips-label">Try asking</div><div class="chips" id="chips"></div></div>
+  <div class="input-area">
+    <textarea id="input" placeholder="Describe what you need help with..." rows="1" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+    <button class="send" id="sendbtn" onclick="send()">Send</button>
+  </div>
+  <div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
 </div>
-<div class="chat" id="chat"></div>
-<div class="chips-area"><div class="chips-label">Try asking</div><div class="chips" id="chips"></div></div>
-<div class="input-area">
-<textarea id="input" placeholder="Describe what you need help with..." rows="1" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
-<button class="send" id="sendbtn" onclick="send()">Send</button>
 </div>
-<div class="footer">Powered by Claude · <span>AgentPromptDesk</span></div>
-</div>
-</div>
+
 <script>
 var WORKER = 'https://agentpromptdesk-api.colton-trismart.workers.dev';
+var FREE_LIMIT = 3;
+// SAME key as everyday-agents.html — shared limit across both pages
+var LS_KEY = 'apd_total_used';
 
 var agents = {
-revenue: {
-  name: 'Revenue Agent',
-  desc: 'Sales · Proposals · Pricing · Outreach · Follow-up',
-  icon: '💰', bg: 'rgba(226,75,74,.15)', init: 'RA', count: '25 prompts',
-  welcome: "I'm your Revenue Agent with all 25 Revenue Vault prompts loaded.\n\nTell me what you need — a proposal, follow-up, pricing conversation, or outreach — and I'll run the right prompt.\n\nWhat are you working on?",
-  chips: ['Write a proposal for a ghosted prospect','Handle a price objection','Write a referral request email','Build my dream client profile'],
-  system: 'You are the Revenue Agent for AgentPromptDesk CEO Prompt Vault. You are a senior B2B sales expert. You have 25 prompts covering discovery calls, objection handling, proposals, follow-ups, referrals, cold outreach, and closing. Identify the most relevant prompt for each situation and produce specific immediately usable output. Be direct and operator-grade.'
-},
-marketing: {
-  name: 'Marketing Agent',
-  desc: 'Content · Copy · Carousels · Email · Ads',
-  icon: '📣', bg: 'rgba(55,138,221,.15)', init: 'MA', count: '30 prompts',
-  welcome: "I'm your Marketing Agent with all 30 Marketing Machine prompts loaded.\n\nI can write hooks, carousels, Reel scripts, threads, newsletters, email sequences, ad copy, and more.\n\nWhat are you creating?",
-  chips: ['Write 20 viral hooks for my next post','Build a 9-slide carousel','Write a Reel script','Create a 5-email launch sequence'],
-  system: 'You are the Marketing Agent for AgentPromptDesk CEO Prompt Vault. You are a world-class content strategist and copywriter for coaches and consultants. You have 30 prompts covering hooks, carousels, reels, threads, newsletters, email sequences, ad copy, DM scripts, and more. Produce specific platform-appropriate output. Voice: sharp, direct, zero fluff.'
-},
-ops: {
-  name: 'Ops Agent',
-  desc: 'SOPs · Systems · Hiring · Planning',
-  icon: '⚙️', bg: 'rgba(29,158,117,.15)', init: 'OA', count: '20 prompts',
-  welcome: "I'm your Ops Agent with all 20 Operations Engine prompts ready.\n\nI can build SOPs, hiring briefs, meeting agendas, decision logs, systems audits, and more.\n\nWhat needs to get organized?",
-  chips: ['Write an SOP for my onboarding','Build a hiring brief for a VA','Run a systems audit','Create my weekly review template'],
-  system: 'You are the Ops Agent for AgentPromptDesk CEO Prompt Vault. You are a senior operations consultant for solo founders. You have 20 prompts covering SOPs, hiring, meetings, email triage, weekly reviews, onboarding, decisions, project kickoffs, client updates, systems audits, and more. Produce structured immediately usable output.'
-},
-aeo: {
-  name: 'AEO Agent',
-  desc: 'ChatGPT · Perplexity · Google AI Overviews',
-  icon: '🎯', bg: 'rgba(186,117,23,.15)', init: 'AA', count: '15 prompts',
-  welcome: "I'm your AEO Agent with all 15 AEO Engine prompts loaded.\n\nI help you get cited by ChatGPT, Perplexity, and Google AI Overviews.\n\nWhat do you want to optimize for?",
-  chips: ['Audit my homepage for AEO signals','Build my entity definition','Generate FAQ schema','Create my 90-day AEO plan'],
-  system: 'You are the AEO Agent for AgentPromptDesk CEO Prompt Vault. You specialize in Answer Engine Optimization. You have 15 prompts covering site audits, answer-first rewriting, FAQ schema, entity building, citation monitoring, and more. Give specific scores, fixes, and next steps.'
-}
+revenue:{name:'Revenue Agent',desc:'Sales · Proposals · Pricing · Outreach · Follow-up',icon:'💰',bg:'rgba(226,75,74,.15)',init:'RA',count:'25 prompts',welcome:"I'm your Revenue Agent with all 25 Revenue Vault prompts loaded.\n\nTell me what you need — a proposal, follow-up, pricing conversation, or outreach — and I'll run the right prompt.\n\nWhat are you working on?",chips:['Write a proposal for a ghosted prospect','Handle a price objection','Write a referral request email','Build my dream client profile'],system:'You are the Revenue Agent for AgentPromptDesk CEO Prompt Vault. You are a senior B2B sales expert. You have 25 prompts covering discovery calls, objection handling, proposals, follow-ups, referrals, cold outreach, and closing. Identify the most relevant prompt for each situation and produce specific immediately usable output. Be direct and operator-grade.'},
+marketing:{name:'Marketing Agent',desc:'Content · Copy · Carousels · Email · Ads',icon:'📣',bg:'rgba(55,138,221,.15)',init:'MA',count:'30 prompts',welcome:"I'm your Marketing Agent with all 30 Marketing Machine prompts loaded.\n\nI can write hooks, carousels, Reel scripts, threads, newsletters, email sequences, ad copy, and more.\n\nWhat are you creating?",chips:['Write 20 viral hooks for my next post','Build a 9-slide carousel','Write a Reel script','Create a 5-email launch sequence'],system:'You are the Marketing Agent for AgentPromptDesk CEO Prompt Vault. You are a world-class content strategist and copywriter for coaches and consultants. You have 30 prompts covering hooks, carousels, reels, threads, newsletters, email sequences, ad copy, DM scripts, and more. Produce specific platform-appropriate output. Voice: sharp, direct, zero fluff.'},
+ops:{name:'Ops Agent',desc:'SOPs · Systems · Hiring · Planning',icon:'⚙️',bg:'rgba(29,158,117,.15)',init:'OA',count:'20 prompts',welcome:"I'm your Ops Agent with all 20 Operations Engine prompts ready.\n\nI can build SOPs, hiring briefs, meeting agendas, decision logs, systems audits, and more.\n\nWhat needs to get organized?",chips:['Write an SOP for my onboarding','Build a hiring brief for a VA','Run a systems audit','Create my weekly review template'],system:'You are the Ops Agent for AgentPromptDesk CEO Prompt Vault. You are a senior operations consultant for solo founders. You have 20 prompts covering SOPs, hiring, meetings, email triage, weekly reviews, onboarding, decisions, project kickoffs, client updates, systems audits, and more. Produce structured immediately usable output.'},
+aeo:{name:'AEO Agent',desc:'ChatGPT · Perplexity · Google AI Overviews',icon:'🎯',bg:'rgba(186,117,23,.15)',init:'AA',count:'15 prompts',welcome:"I'm your AEO Agent with all 15 AEO Engine prompts loaded.\n\nI help you get cited by ChatGPT, Perplexity, and Google AI Overviews.\n\nWhat do you want to optimize for?",chips:['Audit my homepage for AEO signals','Build my entity definition','Generate FAQ schema','Create my 90-day AEO plan'],system:'You are the AEO Agent for AgentPromptDesk CEO Prompt Vault. You specialize in Answer Engine Optimization. You have 15 prompts covering site audits, answer-first rewriting, FAQ schema, entity building, citation monitoring, and more. Give specific scores, fixes, and next steps.'}
 };
 
 var current = 'revenue';
-var msgs = {revenue:[],marketing:[],ops:[],aeo:[]};
+var sessionMsgs = {revenue:[],marketing:[],ops:[],aeo:[]};
 var loading = false;
 
-function switchAgent(k) {
-  current = k;
-  var a = agents[k];
-  var tabs = document.querySelectorAll('.tab');
-  var keys = ['revenue','marketing','ops','aeo'];
-  for (var i = 0; i < tabs.length; i++) {
-    tabs[i].classList.toggle('active', keys[i] === k);
-  }
-  document.getElementById('icon').textContent = a.icon;
-  document.getElementById('icon').style.background = a.bg;
-  document.getElementById('aname').textContent = a.name;
-  document.getElementById('adesc').textContent = a.desc;
-  document.getElementById('acount').textContent = a.count;
-  var chipsEl = document.getElementById('chips');
-  chipsEl.innerHTML = '';
-  for (var j = 0; j < a.chips.length; j++) {
-    var btn = document.createElement('button');
-    btn.className = 'chip';
-    btn.textContent = a.chips[j];
-    btn.onclick = (function(text) { return function() { useChip(text); }; })(a.chips[j]);
+// ── localStorage helpers ──────────────────────────────
+function getTotalUsed(){try{return parseInt(localStorage.getItem(LS_KEY)||'0',10);}catch(e){return 0;}}
+function incrementTotal(){try{localStorage.setItem(LS_KEY,getTotalUsed()+1);}catch(e){}}
+function isLimitHit(){return getTotalUsed()>=FREE_LIMIT;}
+
+// ── Counter UI ────────────────────────────────────────
+function updateCounter(){
+  var used=getTotalUsed();
+  var rem=Math.max(0,FREE_LIMIT-used);
+  var el=document.getElementById('msg-counter');
+  if(rem<=0){el.textContent='Preview ended';el.className='msg-counter last';}
+  else if(rem===1){el.textContent='1 message left';el.className='msg-counter last';}
+  else if(used===0){el.textContent=FREE_LIMIT+' free messages';el.className='msg-counter';}
+  else{el.textContent=rem+' messages left';el.className='msg-counter warn';}
+}
+
+function lockInput(){
+  document.getElementById('input').disabled=true;
+  document.getElementById('sendbtn').disabled=true;
+}
+
+function showPaywall(){
+  document.getElementById('paywall').classList.add('show');
+  lockInput();
+}
+
+// ── Agent switcher ────────────────────────────────────
+function switchAgent(k){
+  current=k;
+  var a=agents[k];
+  var keys=['revenue','marketing','ops','aeo'];
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',keys[i]===k);});
+  document.getElementById('icon').textContent=a.icon;
+  document.getElementById('icon').style.background=a.bg;
+  document.getElementById('aname').textContent=a.name;
+  document.getElementById('adesc').textContent=a.desc;
+  document.getElementById('acount').textContent=a.count;
+  var chipsEl=document.getElementById('chips');
+  chipsEl.innerHTML='';
+  a.chips.forEach(function(txt){
+    var btn=document.createElement('button');
+    btn.className='chip';
+    btn.textContent=txt;
+    btn.onclick=function(){useChip(txt);};
     chipsEl.appendChild(btn);
+  });
+  updateCounter();
+  if(isLimitHit()){showPaywall();}
+  else{
+    document.getElementById('paywall').classList.remove('show');
+    document.getElementById('input').disabled=false;
+    document.getElementById('sendbtn').disabled=false;
   }
   render();
 }
 
-function render() {
-  var a = agents[current];
-  var cw = document.getElementById('chat');
-  var m = msgs[current];
-  if (m.length === 0) {
-    cw.innerHTML = '<div class="msg"><div class="avatar">' + a.init + '</div><div class="bubble">' + a.welcome + '</div></div>';
+function render(){
+  var a=agents[current];
+  var cw=document.getElementById('chat');
+  var m=sessionMsgs[current];
+  if(m.length===0){
+    cw.innerHTML='<div class="msg"><div class="avatar">'+a.init+'</div><div class="bubble">'+a.welcome+'</div></div>';
   } else {
-    var html = '';
-    for (var i = 0; i < m.length; i++) {
-      html += '<div class="msg ' + (m[i].role === 'user' ? 'user' : '') + '"><div class="avatar">' + (m[i].role === 'user' ? 'You' : a.init) + '</div><div class="bubble">' + m[i].content + '</div></div>';
-    }
-    cw.innerHTML = html;
+    cw.innerHTML=m.map(function(msg){
+      return '<div class="msg '+(msg.role==='user'?'user':'')+'"><div class="avatar">'+(msg.role==='user'?'You':a.init)+'</div><div class="bubble">'+msg.content+'</div></div>';
+    }).join('');
   }
-  cw.scrollTop = cw.scrollHeight;
+  cw.scrollTop=cw.scrollHeight;
 }
 
-function useChip(t) {
-  document.getElementById('input').value = t;
-  send();
-}
+function useChip(t){if(isLimitHit()){showPaywall();return;}document.getElementById('input').value=t;send();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-}
-
-function resize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-function send() {
-  if (loading) return;
-  var inp = document.getElementById('input');
-  var t = inp.value.trim();
-  if (!t) return;
-  inp.value = '';
-  inp.style.height = 'auto';
-  loading = true;
-  document.getElementById('sendbtn').disabled = true;
-  msgs[current].push({role:'user', content:t});
+function send(){
+  if(loading)return;
+  if(isLimitHit()){showPaywall();return;}
+  var inp=document.getElementById('input');
+  var t=inp.value.trim();
+  if(!t)return;
+  inp.value='';inp.style.height='auto';
+  loading=true;
+  document.getElementById('sendbtn').disabled=true;
+  // Increment before API call so refresh during load still counts
+  incrementTotal();
+  updateCounter();
+  sessionMsgs[current].push({role:'user',content:t});
   render();
-  var cw = document.getElementById('chat');
-  var ty = document.createElement('div');
-  ty.className = 'msg';
-  ty.id = 'typing';
-  ty.innerHTML = '<div class="avatar">' + agents[current].init + '</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
-  cw.appendChild(ty);
-  cw.scrollTop = cw.scrollHeight;
-
-  var payload = {
-    system: agents[current].system,
-    messages: []
-  };
-  for (var i = 0; i < msgs[current].length; i++) {
-    payload.messages.push({role: msgs[current][i].role, content: msgs[current][i].content});
-  }
-
-  fetch(WORKER, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    var el = document.getElementById('typing');
-    if (el) el.remove();
-    var reply = (d.content && d.content[0] && d.content[0].text) ? d.content[0].text : 'Something went wrong. Please try again.';
-    msgs[current].push({role:'assistant', content:reply});
+  var cw=document.getElementById('chat');
+  var ty=document.createElement('div');
+  ty.className='msg';ty.id='typing';
+  ty.innerHTML='<div class="avatar">'+agents[current].init+'</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  cw.appendChild(ty);cw.scrollTop=cw.scrollHeight;
+  var payload={system:agents[current].system,messages:[]};
+  sessionMsgs[current].forEach(function(msg){payload.messages.push({role:msg.role,content:msg.content});});
+  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var el=document.getElementById('typing');if(el)el.remove();
+    var reply=(d.content&&d.content[0]&&d.content[0].text)?d.content[0].text:'Something went wrong. Please try again.';
+    sessionMsgs[current].push({role:'assistant',content:reply});
     render();
-    loading = false;
-    document.getElementById('sendbtn').disabled = false;
+    loading=false;
+    if(isLimitHit()){setTimeout(showPaywall,900);}
+    else{document.getElementById('sendbtn').disabled=false;}
   })
-  .catch(function(e) {
-    var el = document.getElementById('typing');
-    if (el) el.remove();
-    msgs[current].push({role:'assistant', content:'Connection error: ' + e.message});
+  .catch(function(e){
+    var el=document.getElementById('typing');if(el)el.remove();
+    sessionMsgs[current].push({role:'assistant',content:'Connection error: '+e.message});
     render();
-    loading = false;
-    document.getElementById('sendbtn').disabled = false;
+    loading=false;
+    if(!isLimitHit())document.getElementById('sendbtn').disabled=false;
   });
 }
 
